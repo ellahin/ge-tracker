@@ -1,0 +1,22 @@
+[package]
+name = "osrs-ge-tracker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+askama = "0.12.1"
+axum = "0.7.5"
+axum-valid = "0.18.0"
+chrono = "0.4.38"
+rand = "0.8.5"
+serde = { version = "1.0.203", features = ["derive"] }
+tokio = { version = "1.38.0", features = ["full", "rt", "macros"] }
+tower = "0.4.13"
+tower-http = { version = "0.5.2", features = ["fs"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+validator = { version = "0.18.1", features = ["derive"] }
+sqlx = {version = "0.7.2", features = ["postgres", "runtime-tokio-native-tls", "uuid", "json", "chrono"]}
+reqwest = "0.12.7"
+serde_json = "1.0.127"
+dotenvy = "0.15.7"
