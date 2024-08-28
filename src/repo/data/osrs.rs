@@ -12,6 +12,7 @@ use serde_json;
 pub struct Osrs {
     maps: Arc<Mutex<HashMap<i64, OsrsMap>>>,
     ge: Arc<Mutex<HashMap<i64, GePrice>>>,
+    high_alch_profit: Arc<Mutex<Vec<HighAlchProfit>>>,
     maps_age: DateTime<Utc>,
     ge_age: DateTime<Utc>,
     database: Database,
@@ -40,24 +41,97 @@ impl Osrs {
         let mut temp_map: HashMap<i64, GePrice> = HashMap::new();
 
         for (k, d) in data.iter() {
-            println!("{}", k);
             let temp: i64 = k.clone().parse().unwrap();
 
-            temp_map.insert(temp, d.clone());
+            let mut temp_data = d.clone();
+
+            match temp_data.low {
+                Some(e) => match temp_data.high {
+                    Some(g) => {
+                        if e > g {
+                            temp_data.high = Some(e.clone());
+                        }
+                    }
+                    None => (),
+                },
+                None => (),
+            };
+
+            temp_map.insert(temp, temp_data);
         }
 
-        match database.insert_ge_price_bulk(&temp_map).await {
-            Ok(_) => (),
-            Err(e) => return Err("Cannot insert_ge_price_bulk".to_string()),
-        };
+        //match database.insert_ge_price_bulk(&temp_map).await {
+        //Ok(_) => (),
+        //Err(e) => return Err("Cannot insert_ge_price_bulk".to_string()),
+        //};
+
+        let hap = Osrs::gen_high_alch_profit(&temp_map, &temp_ge_map);
 
         return Ok(Osrs {
             maps: Arc::new(Mutex::new(temp_ge_map)),
             maps_age: chrono::Utc::now(),
+            high_alch_profit: Arc::new(Mutex::new(hap)),
             ge: Arc::new(Mutex::new(temp_map)),
             ge_age: chrono::Utc::now(),
             database: database,
         });
+    }
+
+    fn gen_high_alch_profit(
+        ge: &HashMap<i64, GePrice>,
+        map: &HashMap<i64, OsrsMap>,
+    ) -> Vec<HighAlchProfit> {
+        let mut temp_vec: Vec<HighAlchProfit> = Vec::new();
+        let nr_price = match ge.get(&561_i64) {
+            Some(e) => match e.high {
+                Some(e) => e,
+                None => panic!("no nature ruin price"),
+            },
+
+            None => panic!("no nature ruin price"),
+        };
+
+        for (ge_k, ge_d) in ge.iter() {
+            let price = match ge_d.high {
+                Some(e) => e.clone(),
+                None => match ge_d.low {
+                    Some(e) => e.clone(),
+                    None => continue,
+                },
+            };
+
+            let map_d = match map.get(ge_k) {
+                Some(e) => e,
+                None => continue,
+            };
+
+            let high_alch = match map_d.highalch {
+                Some(e) => e.clone(),
+                None => continue,
+            };
+
+            if high_alch < (price + nr_price) {
+                continue;
+            }
+
+            let profit: i64 = (((high_alch - (price + nr_price)) as f64 / high_alch as f64)
+                * 100_f64)
+                .round() as i64;
+
+            temp_vec.push(HighAlchProfit {
+                profit: profit,
+                ge_val: price,
+                highalch: high_alch,
+                name: map_d.name.clone(),
+                id: map_d.id.clone(),
+                members: map_d.members.clone(),
+                icon: map_d.icon.clone(),
+            })
+        }
+
+        temp_vec.sort_by_key(|d| d.profit);
+
+        return temp_vec;
     }
 
     async fn fetch_maps() -> Result<OsrsMapsRaw, String> {
@@ -117,6 +191,12 @@ impl Osrs {
 
         return stuff.clone();
     }
+
+    pub async fn get_high_alch_profit(&self) -> Vec<HighAlchProfit> {
+        let stuff = self.high_alch_profit.lock().unwrap();
+
+        return stuff.clone();
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -124,10 +204,10 @@ pub struct OsrsMap {
     pub examine: String,
     pub id: i64,
     pub members: bool,
-    pub lowalch: Option<i64>,
-    pub limit: Option<i64>,
-    pub value: i64,
-    pub highalch: Option<i64>,
+    pub lowalch: Option<u128>,
+    pub limit: Option<u128>,
+    pub value: u128,
+    pub highalch: Option<u128>,
     pub icon: String,
     pub name: String,
 }
@@ -143,8 +223,20 @@ pub struct OsrsGeData {
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GePrice {
-    pub high: Option<i64>,
+    pub high: Option<u128>,
     pub high_time: Option<i64>,
-    pub low: Option<i64>,
+    pub low: Option<u128>,
     pub low_time: Option<i64>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HighAlchProfit {
+    pub name: String,
+    pub id: i64,
+    pub members: bool,
+    pub highalch: u128,
+    pub icon: String,
+    pub ge_val: u128,
+    pub profit: i64,
 }

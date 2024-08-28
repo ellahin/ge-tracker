@@ -5,6 +5,7 @@ use std::path::Path;
 
 use sqlx::migrate::Migrator;
 use sqlx::types::chrono::{NaiveDateTime, Utc};
+use sqlx::types::BigDecimal;
 use sqlx::Postgres;
 use sqlx::{PgPool, Pool};
 
@@ -34,7 +35,16 @@ impl Database {
     ) -> Result<(), DatabaseErrors> {
         let now = Utc::now().naive_utc();
         for (k, d) in ge_price.iter() {
-            sqlx::query!("insert into ge.price(item, high, high_time, low, low_time, created) values($1, $2, $3, $4, $5, $6)", &k, d.high, d.high_time, d.low, d.low_time, &now).execute(&self.database).await;
+            let high: Option<BigDecimal> = match d.high {
+                Some(e) => Some(BigDecimal::from(e)),
+                None => None,
+            };
+
+            let low: Option<BigDecimal> = match d.low {
+                Some(e) => Some(BigDecimal::from(e)),
+                None => None,
+            };
+            sqlx::query!("insert into ge.price(item, high, high_time, low, low_time, created) values($1, $2, $3, $4, $5, $6)", &k, high, d.high_time, low, d.low_time, &now).execute(&self.database).await;
         }
         return Ok(());
     }

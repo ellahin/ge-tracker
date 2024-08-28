@@ -20,5 +20,10 @@ async fn main() {
 
     let data = Osrs::new(database.clone()).await.unwrap();
 
-    println!("{:?}", data.get_ge_all().await);
+    for stuff in data.get_high_alch_profit().await {
+        println!(
+            "Name: {}, id: {}, ge: {}, HA: {}, Profit: {}",
+            stuff.name, stuff.id, stuff.ge_val, stuff.highalch, stuff.profit
+        );
+    }
 }

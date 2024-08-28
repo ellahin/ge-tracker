@@ -5,9 +5,9 @@ CREATE SCHEMA ge;
 CREATE TABLE ge.price(
     created timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
     item BIGINT NOT NULL,
-    high BIGINT,
+    high DECIMAL,
     high_time BIGINT,
-    low BIGINT,
+    low DECIMAL,
     low_time BIGINT
     )PARTITION BY RANGE (created);
 
