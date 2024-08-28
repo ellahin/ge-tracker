@@ -1,0 +1,14 @@
+{
+  "name": "osrs-ge-tracker",
+  "version": "1.0.0",
+  "main": "index.js",
+"scripts": {
+    "build": "sass ./scss/main.scss ./public/css/main.css"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+"dependencies": {
+    "bootstrap": "^5.3.3"
+  }
+}
