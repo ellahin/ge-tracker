@@ -179,7 +179,7 @@ impl Osrs {
         let client = reqwest::Client::new();
 
         let res = match client
-            .get("https://prices.runescape.wiki/api/v1/osrs/5m")
+            .get("https://prices.runescape.wiki/api/v1/osrs/latest")
             .header(USER_AGENT, "gecalculator - ellabella on discord")
             .send()
             .await
