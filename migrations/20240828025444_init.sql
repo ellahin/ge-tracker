@@ -14,8 +14,8 @@ CREATE TABLE ge.price(
 SELECT partman.create_parent( p_parent_table => 'ge.price',
  p_control => 'created',
  p_interval=> '1 month',
- p_premake => 2,
- p_type := 'native');
+ p_premake => 2
+ );
 
 CREATE INDEX ON ge.price(created DESC, item);
 CREATE INDEX ON ge.price(created);
