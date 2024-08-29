@@ -179,7 +179,7 @@ impl Osrs {
         let client = reqwest::Client::new();
 
         let res = match client
-            .get("https://prices.runescape.wiki/api/v1/osrs/latest")
+            .get("https://prices.runescape.wiki/api/v1/osrs/5m")
             .header(USER_AGENT, "gecalculator - ellabella on discord")
             .send()
             .await
@@ -206,7 +206,7 @@ impl Osrs {
     ) {
         println!("starting thread");
         loop {
-            tokio::time::sleep(tokio::time::Duration::from_secs(900)).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(300)).await;
             println!("updating Cache");
 
             let data = match Osrs::fetch_maps().await {
