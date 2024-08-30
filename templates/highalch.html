@@ -17,7 +17,7 @@
   {% for profit in profits%}
   <tbody>
     <tr>
-      <td>{{profit.name}}</td>
+      <td><a href="https://www.ge-tracker.com/item/{{profit.name.to_lowercase().replace(" ", "-").replace("'", "-").replace("(", "").replace(")", "")}}">{{profit.name}}</></td>
       <td><img src="https://oldschool.runescape.wiki/images/{{profit.icon.replace(" ","_")}}"></td>
       <td>{{profit.highalch}}gp</td>
       <td>{{profit.ge_val}}gp</td>
