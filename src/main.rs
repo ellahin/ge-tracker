@@ -44,6 +44,7 @@ async fn main() {
     let router = Router::new()
         .route("/", get(routes::index::get))
         .route("/highalch", get(routes::highalch::get))
+        .route("/lowalch", get(routes::lowalch::get))
         .nest_service(
             "/public",
             ServeDir::new(format!("{}/public", assets_path.to_str().unwrap())),

@@ -16,6 +16,7 @@ pub struct Osrs {
     maps: Arc<Mutex<HashMap<i64, OsrsMap>>>,
     ge: Arc<Mutex<HashMap<i64, GePrice>>>,
     high_alch_profit: Arc<Mutex<Vec<HighAlchProfit>>>,
+    low_alch_profit: Arc<Mutex<Vec<LowAlchProfit>>>,
     maps_age: DateTime<Utc>,
     ge_age: DateTime<Utc>,
     database: Database,
@@ -69,30 +70,97 @@ impl Osrs {
         //};
 
         let hap = Osrs::gen_high_alch_profit(&temp_map, &temp_ge_map);
+        let lap = Osrs::gen_low_alch_profit(&temp_map, &temp_ge_map);
 
         let maps = Arc::new(Mutex::new(temp_ge_map));
         let high_alch_profit = Arc::new(Mutex::new(hap));
+        let low_alch_profit = Arc::new(Mutex::new(lap));
         let ge = Arc::new(Mutex::new(temp_map));
 
         let maps_copy = maps.clone();
         let high_alch_profit_copy = high_alch_profit.clone();
+        let low_alch_profit_copy = low_alch_profit.clone();
         let ge_copy = ge.clone();
         let database_copy = database.clone();
 
         tokio::spawn(async move {
-            Osrs::update_schedule(maps_copy, ge_copy, high_alch_profit_copy, database_copy).await;
+            Osrs::update_schedule(
+                maps_copy,
+                ge_copy,
+                high_alch_profit_copy,
+                low_alch_profit_copy,
+                database_copy,
+            )
+            .await;
         });
 
         return Ok(Osrs {
             maps,
             maps_age: chrono::Utc::now(),
             high_alch_profit,
+            low_alch_profit,
             ge,
             ge_age: chrono::Utc::now(),
             database: database,
         });
     }
+    fn gen_low_alch_profit(
+        ge: &HashMap<i64, GePrice>,
+        map: &HashMap<i64, OsrsMap>,
+    ) -> Vec<LowAlchProfit> {
+        let mut temp_vec: Vec<LowAlchProfit> = Vec::new();
+        let nr_price = match ge.get(&561_i64) {
+            Some(e) => match e.high {
+                Some(e) => e,
+                None => panic!("no nature ruin price"),
+            },
 
+            None => panic!("no nature ruin price"),
+        };
+
+        for (ge_k, ge_d) in ge.iter() {
+            let price = match ge_d.high {
+                Some(e) => e.clone(),
+                None => match ge_d.low {
+                    Some(e) => e.clone(),
+                    None => continue,
+                },
+            };
+
+            let map_d = match map.get(ge_k) {
+                Some(e) => e,
+                None => continue,
+            };
+
+            let low_alch = match map_d.lowalch {
+                Some(e) => e.clone(),
+                None => continue,
+            };
+
+            if low_alch < (price + nr_price) {
+                continue;
+            }
+
+            let profit: i64 = (((low_alch - (price + nr_price)) as f64 / low_alch as f64) * 100_f64)
+                .round() as i64;
+
+            temp_vec.push(LowAlchProfit {
+                profit_percent: profit,
+                profit_per_use: (low_alch as i128 - (price as i128 + nr_price as i128)),
+                ge_val: price,
+                lowalch: low_alch,
+                name: map_d.name.clone(),
+                id: map_d.id.clone(),
+                members: map_d.members.clone(),
+                icon: map_d.icon.clone(),
+            })
+        }
+
+        temp_vec.sort_by_key(|d| d.profit_per_use);
+        temp_vec.reverse();
+
+        return temp_vec;
+    }
     fn gen_high_alch_profit(
         ge: &HashMap<i64, GePrice>,
         map: &HashMap<i64, OsrsMap>,
@@ -202,6 +270,7 @@ impl Osrs {
         maps: Arc<Mutex<HashMap<i64, OsrsMap>>>,
         ge: Arc<Mutex<HashMap<i64, GePrice>>>,
         high_alch_profit: Arc<Mutex<Vec<HighAlchProfit>>>,
+        low_alch_profit: Arc<Mutex<Vec<LowAlchProfit>>>,
         database: Database,
     ) {
         println!("starting thread");
@@ -261,6 +330,7 @@ impl Osrs {
             };
 
             let hap = Osrs::gen_high_alch_profit(&temp_map, &temp_ge_map);
+            let lap = Osrs::gen_low_alch_profit(&temp_map, &temp_ge_map);
 
             let mut maps_mut = maps.lock().unwrap();
             *maps_mut = temp_ge_map.clone();
@@ -273,6 +343,10 @@ impl Osrs {
             let mut hap_mut = high_alch_profit.lock().unwrap();
             *hap_mut = hap;
             drop(hap_mut);
+
+            let mut lap_mut = low_alch_profit.lock().unwrap();
+            *lap_mut = lap;
+            drop(lap_mut);
 
             println!("cache updated");
         }
@@ -291,9 +365,12 @@ impl Osrs {
     }
 
     pub async fn get_high_alch_profit(&self) -> Vec<HighAlchProfit> {
-        println!("waiting for lock");
         let stuff = self.high_alch_profit.lock().unwrap();
-        println!("locked");
+        return stuff.clone();
+    }
+
+    pub async fn get_low_alch_profit(&self) -> Vec<LowAlchProfit> {
+        let stuff = self.low_alch_profit.lock().unwrap();
         return stuff.clone();
     }
 
@@ -346,6 +423,19 @@ pub struct HighAlchProfit {
     pub id: i64,
     pub members: bool,
     pub highalch: u128,
+    pub icon: String,
+    pub ge_val: u128,
+    pub profit_percent: i64,
+    pub profit_per_use: i128,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LowAlchProfit {
+    pub name: String,
+    pub id: i64,
+    pub members: bool,
+    pub lowalch: u128,
     pub icon: String,
     pub ge_val: u128,
     pub profit_percent: i64,
