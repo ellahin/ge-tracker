@@ -604,8 +604,7 @@ impl Osrs {
             let profit = price * c.output as i64 - total_cost;
 
             let profit_margin =
-                (((price - total_cost) as f64 / price as f64) * 100_f64).round() as f32;
-
+                ((profit as f64 / (price as f64 * c.output as f64)) * 100_f64).round() as f32;
             res.push(CraftingItemProfit {
                 name: c.name.clone(),
                 icon: c.icon.clone(),
