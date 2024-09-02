@@ -26,7 +26,7 @@
     <tr>
       <th scope="col">Name</th>
       <th scope="col">Level</th>
-      <th scope="col">Experince</th>
+      <th scope="col">Experiance</th>
     </tr>
        
   {% for s in item.skills%}
@@ -55,17 +55,17 @@
 <td><a href="https://www.ge-tracker.com/item/{{m.name.to_lowercase().replace(" ", "-").replace("'", "-").replace("(", "").replace(")", "")}}">{{m.name}}</></td>
       <td><img src="https://oldschool.runescape.wiki/images/{{m.icon.replace(" ","_")}}"></td>
 
-      <td>{{m.cost}}gp</td>
+      <td>{{pretty(m.cost)}}gp</td>
       <td>{{m.count}}</td>
           </tbody>
 
   {%endfor%}
         </table>
       </td>
-      <td>{{item.total_cost}}gp</td>
-      <td>{{item.price}}gp</td>
+      <td>{{pretty(item.total_cost)}}gp</td>
+      <td>{{pretty(item.price)}}gp</td>
       <td>{{item.profit_margin}}%</td>
-      <td>{{item.profit}}gp</td>
+      <td>{{pretty(item.profit)}}gp</td>
     </tr>
       </tbody>
   {%endfor%}

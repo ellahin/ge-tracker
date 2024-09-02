@@ -19,7 +19,11 @@ pub async fn get(State(state): State<AppState>) -> impl IntoResponse {
     };
 
     let profits = state.osrs.get_low_alch_profit();
-    let template = IndexTemplate { profits, nr_price };
+    let template = IndexTemplate {
+        profits,
+        nr_price,
+        pretty: pretty_int,
+    };
     HtmlTemplate(template)
 }
 
@@ -28,8 +32,21 @@ pub async fn get(State(state): State<AppState>) -> impl IntoResponse {
 struct IndexTemplate {
     profits: Vec<LowAlchProfit>,
     nr_price: i64,
+    pretty: fn(i: &i64) -> String,
 }
 
+fn pretty_int(i: &i64) -> String {
+    let mut s = String::new();
+    let i_str = i.to_string();
+    let a = i_str.chars().rev().enumerate();
+    for (idx, val) in a {
+        if idx != 0 && idx % 3 == 0 {
+            s.insert(0, ',');
+        }
+        s.insert(0, val);
+    }
+    s
+}
 /// A wrapper type that we'll use to encapsulate HTML parsed by askama into valid HTML for axum to serve.
 struct HtmlTemplate<T>(T);
 

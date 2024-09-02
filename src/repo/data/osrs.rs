@@ -157,7 +157,7 @@ impl Osrs {
 
             temp_vec.push(LowAlchProfit {
                 profit_percent: profit,
-                profit_per_use: (low_alch as i128 - (price as i128 + nr_price as i128)),
+                profit_per_use: (low_alch as i64 - (price as i64 + nr_price as i64)),
                 ge_val: price,
                 lowalch: low_alch,
                 name: map_d.name.clone(),
@@ -215,7 +215,7 @@ impl Osrs {
 
             temp_vec.push(HighAlchProfit {
                 profit_percent: profit,
-                profit_per_use: (high_alch as i128 - (price as i128 + nr_price as i128)),
+                profit_per_use: (high_alch as i64 - (price as i64 + nr_price as i64)),
                 ge_val: price,
                 highalch: high_alch,
                 name: map_d.name.clone(),
@@ -793,7 +793,7 @@ pub struct HighAlchProfit {
     pub icon: String,
     pub ge_val: i64,
     pub profit_percent: i64,
-    pub profit_per_use: i128,
+    pub profit_per_use: i64,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -806,5 +806,5 @@ pub struct LowAlchProfit {
     pub icon: String,
     pub ge_val: i64,
     pub profit_percent: i64,
-    pub profit_per_use: i128,
+    pub profit_per_use: i64,
 }
