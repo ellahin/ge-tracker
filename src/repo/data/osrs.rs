@@ -601,7 +601,7 @@ impl Osrs {
                 total_cost += m.cost * m.count as i64;
             }
 
-            let profit = price - total_cost;
+            let profit = price * c.output as i64 - total_cost;
 
             let profit_margin =
                 (((price - total_cost) as f64 / price as f64) * 100_f64).round() as f32;
