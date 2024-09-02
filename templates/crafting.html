@@ -1,12 +1,15 @@
 {% extends "base.html" %} {% block title %}{% endblock %}
 {%block content %} 
+
+<div class=" px-3 position-relative">
 <table class="table table-striped border border-black">
-  <thead>
+  <thead class="sticky-top top-0">
     <tr>
       <th scope="col">Name</th>
       <th scope="col">Image</th>
       <th scope="col">Skill</th>
       <th scope="col">Items</th>
+      <th scope="col">Facilities</th>
       <th scope="col">Total Cost</th>
       <th scope="col">GE Price</th>
       <th scope="col">Profit margin</th>
@@ -62,6 +65,7 @@
   {%endfor%}
         </table>
       </td>
+      <td>{{stringnull(item.facilities)}}</td>
       <td>{{pretty(item.total_cost)}}gp</td>
       <td>{{pretty(item.price)}}gp</td>
       <td>{{item.profit_margin}}%</td>
@@ -70,6 +74,5 @@
       </tbody>
   {%endfor%}
 </table>
-</div>
 </div>
 {% endblock %}

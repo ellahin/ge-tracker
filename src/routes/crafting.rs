@@ -12,7 +12,7 @@ pub async fn get(State(state): State<AppState>) -> impl IntoResponse {
     let crafting = state.osrs.get_crafting_profit();
     let template = IndexTemplate {
         crafting,
-
+        stringnull: stringnull,
         pretty: pretty_int,
     };
     HtmlTemplate(template)
@@ -23,6 +23,7 @@ pub async fn get(State(state): State<AppState>) -> impl IntoResponse {
 struct IndexTemplate {
     crafting: Vec<CraftingItemProfit>,
     pretty: fn(i: &i64) -> String,
+    stringnull: fn(i: &Option<String>) -> String,
 }
 
 fn pretty_int(i: &i64) -> String {
@@ -36,6 +37,13 @@ fn pretty_int(i: &i64) -> String {
         s.insert(0, val);
     }
     s
+}
+
+fn stringnull(s: &Option<String>) -> String {
+    match s {
+        Some(e) => e.to_string(),
+        None => "-".to_string(),
+    }
 }
 
 /// A wrapper type that we'll use to encapsulate HTML parsed by askama into valid HTML for axum to serve.
