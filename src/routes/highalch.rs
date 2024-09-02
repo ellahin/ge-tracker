@@ -9,7 +9,7 @@ use crate::repo::data::osrs::HighAlchProfit;
 use crate::AppState;
 
 pub async fn get(State(state): State<AppState>) -> impl IntoResponse {
-    let nr_price = match state.osrs.get_ge_one(&561_i64).await {
+    let nr_price = match state.osrs.get_ge_one(&561_i64) {
         Some(e) => match e.high {
             Some(e) => e,
             None => panic!("no nature ruin price"),
@@ -18,7 +18,7 @@ pub async fn get(State(state): State<AppState>) -> impl IntoResponse {
         None => panic!("no nature ruin price"),
     };
 
-    let profits = state.osrs.get_high_alch_profit().await;
+    let profits = state.osrs.get_high_alch_profit();
     let template = IndexTemplate { profits, nr_price };
     HtmlTemplate(template)
 }
@@ -27,7 +27,7 @@ pub async fn get(State(state): State<AppState>) -> impl IntoResponse {
 #[template(path = "highalch.html")]
 struct IndexTemplate {
     profits: Vec<HighAlchProfit>,
-    nr_price: u128,
+    nr_price: i64,
 }
 
 /// A wrapper type that we'll use to encapsulate HTML parsed by askama into valid HTML for axum to serve.

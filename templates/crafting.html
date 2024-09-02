@@ -1,0 +1,75 @@
+{% extends "base.html" %} {% block title %}{% endblock %}
+{%block content %} 
+<table class="table table-striped border border-black">
+  <thead>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Image</th>
+      <th scope="col">Skill</th>
+      <th scope="col">Items</th>
+      <th scope="col">Total Cost</th>
+      <th scope="col">GE Price</th>
+      <th scope="col">Profit margin</th>
+      <th scope="col">Profit</th>
+    </tr>
+  </thead>
+  {% for item in crafting %}
+  <tbody>
+    <tr>
+      <td><a href="https://www.ge-tracker.com/item/{{item.name.to_lowercase().replace(" ", "-").replace("'", "-").replace("(", "").replace(")", "")}}">{{item.name}}</></td>
+      <td><img src="https://oldschool.runescape.wiki/images/{{item.icon.replace(" ","_")}}"></td>
+
+      <td>
+
+<table class="table">
+   <thead>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Level</th>
+      <th scope="col">Experince</th>
+    </tr>
+       
+  {% for s in item.skills%}
+
+          <tbody>
+      <td>{{s.name}}</td>
+      <td>{{s.level}}</td>
+      <td>{{s.experience}}</td>
+          </tbody>
+  {%endfor%}
+        </table>
+
+      </td>
+      <td>
+        <table class="table">
+   <thead>
+    <tr>
+      <th scope="col">Item</th>
+      <th scope="col">Icon</th>
+      <th scope="col">Cost</th>
+      <th scope="col">Count</th>
+    </tr>
+       
+  {% for m in item.materials %}
+          <tbody>
+<td><a href="https://www.ge-tracker.com/item/{{m.name.to_lowercase().replace(" ", "-").replace("'", "-").replace("(", "").replace(")", "")}}">{{m.name}}</></td>
+      <td><img src="https://oldschool.runescape.wiki/images/{{m.icon.replace(" ","_")}}"></td>
+
+      <td>{{m.cost}}gp</td>
+      <td>{{m.count}}</td>
+          </tbody>
+
+  {%endfor%}
+        </table>
+      </td>
+      <td>{{item.total_cost}}gp</td>
+      <td>{{item.price}}gp</td>
+      <td>{{item.profit_margin}}%</td>
+      <td>{{item.profit}}gp</td>
+    </tr>
+      </tbody>
+  {%endfor%}
+</table>
+</div>
+</div>
+{% endblock %}

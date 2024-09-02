@@ -5,29 +5,19 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 
-use crate::repo::data::osrs::LowAlchProfit;
+use crate::repo::data::osrs::CraftingItemProfit;
 use crate::AppState;
 
 pub async fn get(State(state): State<AppState>) -> impl IntoResponse {
-    let nr_price = match state.osrs.get_ge_one(&561_i64) {
-        Some(e) => match e.high {
-            Some(e) => e,
-            None => panic!("no nature ruin price"),
-        },
-
-        None => panic!("no nature ruin price"),
-    };
-
-    let profits = state.osrs.get_low_alch_profit();
-    let template = IndexTemplate { profits, nr_price };
+    let crafting = state.osrs.get_crafting_profit();
+    let template = IndexTemplate { crafting };
     HtmlTemplate(template)
 }
 
 #[derive(Template)]
-#[template(path = "lowalch.html")]
+#[template(path = "crafting.html")]
 struct IndexTemplate {
-    profits: Vec<LowAlchProfit>,
-    nr_price: i64,
+    crafting: Vec<CraftingItemProfit>,
 }
 
 /// A wrapper type that we'll use to encapsulate HTML parsed by askama into valid HTML for axum to serve.

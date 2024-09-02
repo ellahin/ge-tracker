@@ -45,6 +45,7 @@ async fn main() {
         .route("/", get(routes::index::get))
         .route("/highalch", get(routes::highalch::get))
         .route("/lowalch", get(routes::lowalch::get))
+        .route("/crafting", get(routes::crafting::get))
         .nest_service(
             "/public",
             ServeDir::new(format!("{}/public", assets_path.to_str().unwrap())),
