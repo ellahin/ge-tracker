@@ -598,7 +598,7 @@ impl Osrs {
             let mut total_cost: i64 = 0;
 
             for m in &material_data {
-                total_cost += m.cost;
+                total_cost += m.cost * m.count as i64;
             }
 
             let profit = price - total_cost;
