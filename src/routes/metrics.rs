@@ -17,7 +17,7 @@ pub async fn get(State(state): State<AppState>) -> String {
     for (k, d) in ge_price.iter() {
         match d.high {
             Some(e) => {
-                res = format!("{}ge_item_high_price(item_id=\"{}\"){}\n", res, k, e);
+                res = format!("{}ge_item_high_price{{item_id=\"{}\"}} {}\n", res, k, e);
             }
             None => (),
         };
@@ -28,7 +28,7 @@ pub async fn get(State(state): State<AppState>) -> String {
     for (k, d) in ge_price.iter() {
         match d.low {
             Some(e) => {
-                res = format!("{}ge_item_low_price(item_id=\"{}\"){}\n", res, k, e);
+                res = format!("{}ge_item_low_price{{item_id=\"{}\"}} {}\n", res, k, e);
             }
             None => (),
         };
@@ -42,7 +42,7 @@ pub async fn get(State(state): State<AppState>) -> String {
 
     for d in high_alch.clone() {
         res = format!(
-            "{}ge_high_alch_profit_percent(item_id=\"{}\",members=\"{}\"){}\n",
+            "{}ge_high_alch_profit_percent{{item_id=\"{}\",members=\"{}\"}} {}\n",
             res, d.id, d.members, d.profit_percent
         );
     }
@@ -51,7 +51,7 @@ pub async fn get(State(state): State<AppState>) -> String {
 
     for d in high_alch {
         res = format!(
-            "{}ge_high_alch_profit(item_id=\"{}\",members=\"{}\"){}\n",
+            "{}ge_high_alch_profit{{item_id=\"{}\",members=\"{}\"}} {}\n",
             res, d.id, d.members, d.profit_per_use
         );
     }
@@ -62,7 +62,7 @@ pub async fn get(State(state): State<AppState>) -> String {
 
     for d in &low_alch {
         res = format!(
-            "{}ge_low_alch_profit_percent(item_id=\"{}\",members=\"{}\"){}\n",
+            "{}ge_low_alch_profit_percent{{item_id=\"{}\",members=\"{}\"}} {}\n",
             res, d.id, d.members, d.profit_percent
         );
     }
@@ -71,7 +71,7 @@ pub async fn get(State(state): State<AppState>) -> String {
 
     for d in &low_alch {
         res = format!(
-            "{}ge_low_alch_profit(item_id=\"{}\",members=\"{}\"){}\n",
+            "{}ge_low_alch_profit{{item_id=\"{}\",members=\"{}\"}} {}\n",
             res, d.id, d.members, d.profit_per_use
         );
     }
@@ -84,7 +84,7 @@ pub async fn get(State(state): State<AppState>) -> String {
 
     for d in &crafting {
         res = format!(
-            "{}ge_crafting_profit(item_id=\"{}\",members=\"{}\",){}\n",
+            "{}ge_crafting_profit{{item_id=\"{}\",members=\"{}\"}} {}\n",
             res, d.id, d.members, d.profit
         );
     }
@@ -93,7 +93,7 @@ pub async fn get(State(state): State<AppState>) -> String {
 
     for d in &crafting {
         res = format!(
-            "{}ge_crafting_profit_margin(item_id=\"{}\",members=\"{}\",){}\n",
+            "{}ge_crafting_profit_margin{{item_id=\"{}\",members=\"{}\"}} {}\n",
             res, d.id, d.members, d.profit_margin
         );
     }
@@ -102,7 +102,7 @@ pub async fn get(State(state): State<AppState>) -> String {
 
     for d in &crafting {
         res = format!(
-            "{}ge_crafting_price(item_id=\"{}\",members=\"{}\",){}\n",
+            "{}ge_crafting_price{{item_id=\"{}\",members=\"{}\"}} {}\n",
             res, d.id, d.members, d.price
         );
     }
