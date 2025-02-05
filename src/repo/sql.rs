@@ -16,17 +16,14 @@ pub struct Database {
 
 impl Database {
     pub async fn new(database_url: String) -> Result<Self, String> {
-        let migration_path = Path::new("./migrations");
+        let migrator = sqlx::migrate!("./migrations");
 
         let sql_pool = PgPool::connect(&database_url).await.unwrap();
 
-        Migrator::new(migration_path)
-            .await
-            .unwrap()
-            .run(&sql_pool)
-            .await
-            .unwrap();
-        return Ok(Database { database: sql_pool });
+        match migrator.run(&sql_pool).await {
+            Ok(_) => Ok(Database { database: sql_pool }),
+            Err(_) => Err("Cannot migrate database".to_string()),
+        }
     }
 
     pub async fn insert_ge_price_bulk(
