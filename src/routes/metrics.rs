@@ -14,10 +14,19 @@ pub async fn get(State(state): State<AppState>) -> String {
 
     res = format!("{}# Ge high price\n", res);
 
+    let map = state.osrs.get_maps_all();
+
     for (k, d) in ge_price.iter() {
         match d.high {
             Some(e) => {
-                res = format!("{}ge_item_high_price{{item_id=\"{}\"}} {}\n", res, k, e);
+                let name = match map.get(k) {
+                    Some(e) => e.name.clone(),
+                    None => continue,
+                };
+                res = format!(
+                    "{}ge_item_high_price{{item_id=\"{}\",item_name=\"{}\"}} {}\n",
+                    res, k, name, e
+                );
             }
             None => (),
         };
@@ -28,7 +37,15 @@ pub async fn get(State(state): State<AppState>) -> String {
     for (k, d) in ge_price.iter() {
         match d.low {
             Some(e) => {
-                res = format!("{}ge_item_low_price{{item_id=\"{}\"}} {}\n", res, k, e);
+                let name = match map.get(k) {
+                    Some(e) => e.name.clone(),
+                    None => continue,
+                };
+
+                res = format!(
+                    "{}ge_item_low_price{{item_id=\"{}\",item_name=\"{}\"}} {}\n",
+                    res, k, name, e
+                );
             }
             None => (),
         };
@@ -41,18 +58,28 @@ pub async fn get(State(state): State<AppState>) -> String {
     let high_alch = state.osrs.get_high_alch_profit();
 
     for d in high_alch.clone() {
+        let name = match map.get(&d.id) {
+            Some(e) => e.name.clone(),
+            None => continue,
+        };
+
         res = format!(
-            "{}ge_high_alch_profit_percent{{item_id=\"{}\",members=\"{}\"}} {}\n",
-            res, d.id, d.members, d.profit_percent
+            "{}ge_high_alch_profit_percent{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+            res, d.id, name, d.members, d.profit_percent
         );
     }
 
     res = format!("{}# High Alch profit\n", res);
 
     for d in high_alch {
+        let name = match map.get(&d.id) {
+            Some(e) => e.name.clone(),
+            None => continue,
+        };
+
         res = format!(
-            "{}ge_high_alch_profit{{item_id=\"{}\",members=\"{}\"}} {}\n",
-            res, d.id, d.members, d.profit_per_use
+            "{}ge_high_alch_profit{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+            res, d.id, name, d.members, d.profit_per_use
         );
     }
 
@@ -61,18 +88,28 @@ pub async fn get(State(state): State<AppState>) -> String {
     let low_alch = state.osrs.get_low_alch_profit();
 
     for d in &low_alch {
+        let name = match map.get(&d.id) {
+            Some(e) => e.name.clone(),
+            None => continue,
+        };
+
         res = format!(
-            "{}ge_low_alch_profit_percent{{item_id=\"{}\",members=\"{}\"}} {}\n",
-            res, d.id, d.members, d.profit_percent
+            "{}ge_low_alch_profit_percent{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+            res, d.id, name, d.members, d.profit_percent
         );
     }
 
     res = format!("{}# Low Alch profit\n", res);
 
     for d in &low_alch {
+        let name = match map.get(&d.id) {
+            Some(e) => e.name.clone(),
+            None => continue,
+        };
+
         res = format!(
-            "{}ge_low_alch_profit{{item_id=\"{}\",members=\"{}\"}} {}\n",
-            res, d.id, d.members, d.profit_per_use
+            "{}ge_low_alch_profit{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+            res, d.id, name, d.members, d.profit_per_use
         );
     }
 
@@ -83,27 +120,42 @@ pub async fn get(State(state): State<AppState>) -> String {
     res = format!("{}# Crafting profit\n", res);
 
     for d in &crafting {
+        let name = match map.get(&d.id) {
+            Some(e) => e.name.clone(),
+            None => continue,
+        };
+
         res = format!(
-            "{}ge_crafting_profit{{item_id=\"{}\",members=\"{}\"}} {}\n",
-            res, d.id, d.members, d.profit
+            "{}ge_crafting_profit{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+            res, d.id, name, d.members, d.profit
         );
     }
 
     res = format!("{}# Crafting profit margin\n", res);
 
     for d in &crafting {
+        let name = match map.get(&d.id) {
+            Some(e) => e.name.clone(),
+            None => continue,
+        };
+
         res = format!(
-            "{}ge_crafting_profit_margin{{item_id=\"{}\",members=\"{}\"}} {}\n",
-            res, d.id, d.members, d.profit_margin
+            "{}ge_crafting_profit_margin{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+            res, d.id, name, d.members, d.profit_margin
         );
     }
 
     res = format!("{}# Crafting price\n", res);
 
     for d in &crafting {
+        let name = match map.get(&d.id) {
+            Some(e) => e.name.clone(),
+            None => continue,
+        };
+
         res = format!(
-            "{}ge_crafting_price{{item_id=\"{}\",members=\"{}\"}} {}\n",
-            res, d.id, d.members, d.price
+            "{}ge_crafting_price{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+            res, d.id, name, d.members, d.price
         );
     }
 
