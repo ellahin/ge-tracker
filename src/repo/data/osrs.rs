@@ -18,9 +18,8 @@ pub struct Osrs {
     ge: Arc<Mutex<HashMap<i64, GePrice>>>,
     high_alch_profit: Arc<Mutex<Vec<HighAlchProfit>>>,
     low_alch_profit: Arc<Mutex<Vec<LowAlchProfit>>>,
-    crafting: Arc<Vec<CraftingItem>>,
     crafting_profit: Arc<Mutex<Vec<CraftingItemProfit>>>,
-    database: Database,
+    metrics_string: Arc<Mutex<String>>,
 }
 
 impl Osrs {
@@ -67,7 +66,7 @@ impl Osrs {
 
         match database.insert_ge_price_bulk(&temp_map).await {
             Ok(_) => (),
-            Err(e) => return Err("Cannot insert_ge_price_bulk".to_string()),
+            Err(_) => return Err("Cannot insert_ge_price_bulk".to_string()),
         };
 
         let hap = Osrs::gen_high_alch_profit(&temp_map, &temp_ge_map);
@@ -75,6 +74,7 @@ impl Osrs {
         let ci_temp = Osrs::fetch_crafting().await;
         let ci = Osrs::convert_crafting(ci_temp, temp_ge_map.clone());
         let ci_ge = Osrs::convert_crafting_profit(&ci, temp_map.clone());
+        let met = Osrs::gen_metric_string(&temp_map, &temp_ge_map, &lap, &hap, &ci_ge);
 
         let crafting_clone = ci.clone();
 
@@ -82,8 +82,8 @@ impl Osrs {
         let high_alch_profit = Arc::new(Mutex::new(hap));
         let low_alch_profit = Arc::new(Mutex::new(lap));
         let ge = Arc::new(Mutex::new(temp_map));
-        let crafting = Arc::new(ci);
         let crafting_profit = Arc::new(Mutex::new(ci_ge));
+        let metrics_string = Arc::new(Mutex::new(met));
 
         let maps_copy = maps.clone();
         let high_alch_profit_copy = high_alch_profit.clone();
@@ -91,6 +91,7 @@ impl Osrs {
         let ge_copy = ge.clone();
         let database_copy = database.clone();
         let crafting_profit_copy = crafting_profit.clone();
+        let metrics_string_copy = metrics_string.clone();
 
         tokio::spawn(async move {
             Osrs::update_schedule(
@@ -100,6 +101,7 @@ impl Osrs {
                 low_alch_profit_copy,
                 crafting_clone,
                 crafting_profit_copy,
+                metrics_string_copy,
                 database_copy,
             )
             .await;
@@ -110,9 +112,8 @@ impl Osrs {
             high_alch_profit,
             low_alch_profit,
             ge,
-            database,
             crafting_profit,
-            crafting,
+            metrics_string,
         });
     }
     fn gen_low_alch_profit(
@@ -231,6 +232,154 @@ impl Osrs {
         return temp_vec;
     }
 
+    fn gen_metric_string(
+        ge: &HashMap<i64, GePrice>,
+
+        map: &HashMap<i64, OsrsMap>,
+        low: &Vec<LowAlchProfit>,
+        high: &Vec<HighAlchProfit>,
+        crafting: &Vec<CraftingItemProfit>,
+    ) -> String {
+        let mut res = "".to_string();
+
+        res = format!("{}# Ge high price\n", res);
+
+        for (k, d) in ge.iter() {
+            match d.high {
+                Some(e) => {
+                    let name = match map.get(k) {
+                        Some(e) => e.name.clone(),
+                        None => continue,
+                    };
+                    res = format!(
+                        "{}ge_item_high_price{{item_id=\"{}\",item_name=\"{}\"}} {}\n",
+                        res, k, name, e
+                    );
+                }
+                None => (),
+            };
+        }
+
+        res = format!("{}# Ge low price\n", res);
+
+        for (k, d) in ge.iter() {
+            match d.low {
+                Some(e) => {
+                    let name = match map.get(k) {
+                        Some(e) => e.name.clone(),
+                        None => continue,
+                    };
+
+                    res = format!(
+                        "{}ge_item_low_price{{item_id=\"{}\",item_name=\"{}\"}} {}\n",
+                        res, k, name, e
+                    );
+                }
+                None => (),
+            };
+        }
+
+        res = format!("{}# High Alch profit percent\n", res);
+
+        for d in high {
+            let name = match map.get(&d.id) {
+                Some(e) => e.name.clone(),
+                None => continue,
+            };
+
+            res = format!(
+            "{}ge_high_alch_profit_percent{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+            res, d.id, name, d.members, d.profit_percent
+        );
+        }
+
+        res = format!("{}# High Alch profit\n", res);
+
+        for d in high {
+            let name = match map.get(&d.id) {
+                Some(e) => e.name.clone(),
+                None => continue,
+            };
+
+            res = format!(
+                "{}ge_high_alch_profit{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+                res, d.id, name, d.members, d.profit_per_use
+            );
+        }
+
+        res = format!("{}# Low Alch profit percent\n", res);
+
+        for d in low {
+            let name = match map.get(&d.id) {
+                Some(e) => e.name.clone(),
+                None => continue,
+            };
+
+            res = format!(
+            "{}ge_low_alch_profit_percent{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+            res, d.id, name, d.members, d.profit_percent
+        );
+        }
+
+        res = format!("{}# Low Alch profit\n", res);
+
+        for d in low {
+            let name = match map.get(&d.id) {
+                Some(e) => e.name.clone(),
+                None => continue,
+            };
+
+            res = format!(
+                "{}ge_low_alch_profit{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+                res, d.id, name, d.members, d.profit_per_use
+            );
+        }
+
+        res = format!("{}# Crafting profit\n", res);
+
+        for d in crafting {
+            let name = match map.get(&d.id) {
+                Some(e) => e.name.clone(),
+                None => continue,
+            };
+
+            res = format!(
+                "{}ge_crafting_profit{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+                res, d.id, name, d.members, d.profit
+            );
+        }
+
+        res = format!("{}# Crafting profit margin\n", res);
+
+        for d in crafting {
+            let name = match map.get(&d.id) {
+                Some(e) => e.name.clone(),
+                None => continue,
+            };
+
+            res = format!(
+            "{}ge_crafting_profit_margin{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+            res, d.id, name, d.members, d.profit_margin
+        );
+        }
+
+        res = format!("{}# Crafting price\n", res);
+
+        for d in crafting {
+            let name = match map.get(&d.id) {
+                Some(e) => e.name.clone(),
+                None => continue,
+            };
+
+            res = format!(
+                "{}ge_crafting_price{{item_id=\"{}\",item_name=\"{}\",members=\"{}\"}} {}\n",
+                res, d.id, name, d.members, d.price
+            );
+        }
+
+        return res;
+    }
+
     async fn fetch_maps() -> Result<OsrsMapsRaw, String> {
         let client = reqwest::Client::new();
 
@@ -284,6 +433,7 @@ impl Osrs {
         low_alch_profit: Arc<Mutex<Vec<LowAlchProfit>>>,
         crafting: Vec<CraftingItem>,
         craftting_profit: Arc<Mutex<Vec<CraftingItemProfit>>>,
+        metrics_string: Arc<Mutex<String>>,
         database: Database,
     ) {
         println!("starting thread");
@@ -293,7 +443,7 @@ impl Osrs {
 
             let data = match Osrs::fetch_maps().await {
                 Ok(e) => e,
-                Err(e) => {
+                Err(_) => {
                     println!("cannot fetch maps");
                     continue;
                 }
@@ -345,6 +495,7 @@ impl Osrs {
             let hap = Osrs::gen_high_alch_profit(&temp_map, &temp_ge_map);
             let lap = Osrs::gen_low_alch_profit(&temp_map, &temp_ge_map);
             let ci_ge = Osrs::convert_crafting_profit(&crafting.clone(), temp_map.clone());
+            let met = Osrs::gen_metric_string(&temp_map, &temp_ge_map, &lap, &hap, &ci_ge);
 
             let mut maps_mut = maps.lock().unwrap();
             *maps_mut = temp_ge_map.clone();
@@ -365,6 +516,10 @@ impl Osrs {
             let mut ci_ge_mut = craftting_profit.lock().unwrap();
             *ci_ge_mut = ci_ge;
             drop(ci_ge_mut);
+
+            let mut met_mut = metrics_string.lock().unwrap();
+            *met_mut = met;
+            drop(met_mut);
 
             println!("cache updated");
         }
@@ -406,6 +561,12 @@ impl Osrs {
             Some(e) => Some(e.clone()),
             None => None,
         };
+    }
+
+    pub fn get_metrics_string(&self) -> String {
+        let stuff = self.metrics_string.lock().unwrap();
+
+        return stuff.clone();
     }
 
     async fn fetch_crafting() -> HashMap<String, CraftingRequestItem> {
@@ -455,7 +616,7 @@ impl Osrs {
     ) -> Vec<CraftingItem> {
         let mut cleaned_map: HashMap<String, OsrsMap> = HashMap::new();
 
-        for (k, d) in map {
+        for (_, d) in map {
             cleaned_map.insert(d.name.clone(), d.clone());
         }
 
